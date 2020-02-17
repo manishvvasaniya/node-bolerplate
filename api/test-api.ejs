@@ -1,0 +1,317 @@
+<html>
+  <head>
+    <title>Youbelong App Test Api</title>
+    <style>
+      div {
+        float: left;
+      }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-sweetalert/1.0.1/sweetalert.min.css"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-sweetalert/1.0.1/sweetalert.min.js"></script>
+
+    <script>
+      window.api_id = "241039533270120cafbb4d776c810326";
+      window.api_secret = "9c51cd2e1c04a906187e30cc1fc170ba";
+      var testcases = [];
+
+      testcases.push({
+        api_id: window.api_id,
+        api_secret: window.api_secret,
+        api_request: "--- GENERAL SERVICES ---",
+        data: {}
+      });
+
+      testcases.push({
+        api_id: window.api_id,
+        api_secret: window.api_secret,
+        api_request: "login",
+        data: {
+          Email: "test@gmail.com",
+          Password: "098f6bcd4621d373cade4e832627b4f6",
+          Secret: "7629660670a3ad7613e56f048e217c10"
+        }
+      });
+
+      testcases.push({
+        api_id: window.api_id,
+        api_secret: window.api_secret,
+        api_request: "signUp",
+        data: {
+          FirstName: "Test",
+          LastName: "User",
+          Email: "test@gmail.com",
+          Password: "098f6bcd4621d373cade4e832627b4f6",
+          PhoneNo: "0000000000",
+          ProfilePic: "",
+          Secret: "7629660670a3ad7613e56f048e217c10"
+        }
+      });
+
+      function runTestcase() {
+        try {
+          var data = JSON.parse($(".testcase").val());
+        } catch (e) {
+          $(".output").val("Invalid JSON.");
+          return;
+        }
+        if (data) {
+          var Authorization = $(".Authorization").val();
+          var DeviceType = $(".DeviceType").val();
+          var DeviceId = $(".DeviceId").val();
+          var req = JSON.parse($(".testcase").val());
+          if (
+            req.api_request != "login" &&
+            req.api_request != "signUp" &&
+            req.api_request != "forgotPassword" &&
+            req.api_request != "signUp_test" &&
+            req.api_request != "forgotPassword" &&
+            req.api_request != "changePassword" &&
+            req.api_request != "checkPromocode" &&
+            req.api_request != "getPlan" &&
+            req.api_request != "logout" &&
+            req.api_request != "forcefullyUpdateApp" &&
+            req.api_request != "checkEmailAvailability" &&
+            req.api_request != "verifyLink"
+          ) {
+            if (Authorization == "") {
+              swal("Api", "Authorization can not be empty", "warning");
+              return false;
+            }
+            if (DeviceType == "") {
+              swal("Api", "Device type can not be empty.", "warning");
+              return false;
+            }
+            if (DeviceId == "") {
+              swal("Api", "Device id can not be empty.", "warning");
+              return false;
+            }
+          }
+
+          $.ajax({
+            method: "POST",
+            url: "/api",
+            headers: {
+              Authorization: Authorization,
+              DeviceType: DeviceType,
+              DeviceId: DeviceId
+            },
+            data: JSON.parse($(".testcase").val()),
+            success: function(responsejson) {
+              if (
+                typeof responsejson == "string" ||
+                responsejson instanceof String
+              ) {
+                try {
+                  var output = JSON.parse(responsejson);
+                  $(".output").val(JSON.stringify(output, null, 4));
+                  if (req.api_request == "login") {
+                    var AccessToken =
+                      "horse" + " " + output["data"]["AccessToken"];
+                    //$('#Authorization').val(AccessToken);
+                    localStorage.setItem("AccessToken", AccessToken);
+                  }
+                } catch (e) {
+                  $(".output").val(responsejson);
+                }
+              } else {
+                $(".output").val(JSON.stringify(responsejson, null, 4));
+              }
+              if ($(".output").val() == "") {
+                $(".output").val("No output.");
+              }
+            },
+            error: function(data, status, error_thrown) {
+              $(".output").val("Error: " + error_thrown);
+            }
+          });
+        }
+      }
+      function encrypt() {
+        window.location = "?input=" + $(".testcase").val() + "&encrypt=1";
+      }
+      function decrypt() {
+        window.location = "?input=" + $(".testcase").val() + "&decrypt=1";
+      }
+      function toJSON(responsejson) {
+        try {
+          var response = JSON.parse(responsejson);
+          return response;
+        } catch (e) {
+          return responsejson;
+        }
+      }
+      $(document).ready(function() {
+        for (var i = 0; i < testcases.length; i++) {
+          $(".select").append(
+            '<option value="' +
+              i +
+              '">' +
+              testcases[i].api_request +
+              "</option>"
+          );
+        }
+        $(".select").change(function() {
+          var selected_service = $(".select option:selected").text();
+          if (
+            selected_service == "login" ||
+            selected_service == "signUp" ||
+            selected_service == "forgotPassword"
+          ) {
+            $("#Authorization").val("");
+          } else {
+            var AccessToken = localStorage.getItem("AccessToken");
+            if (AccessToken != "") {
+              $("#Authorization").val(AccessToken);
+            }
+          }
+
+          if ($(".select").val() != -1) {
+            $(".testcase").val(
+              JSON.stringify(testcases[$(".select").val()], null, 4)
+            );
+            $(".output").val("");
+          }
+        });
+      });
+
+      $(function() {
+        $(".select").select2();
+      });
+    </script>
+    <style>
+      input {
+        height: 34px;
+        padding: 6px 12px;
+        font-size: 14px;
+        line-height: 1.42857143;
+        color: #555;
+        background-color: #fff;
+        background-image: none;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      .headers {
+        padding: 10px;
+        font-weight: 900;
+      }
+      ::-webkit-scrollbar {
+        width: 5px;
+      }
+
+      ::-webkit-scrollbar-track {
+        -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+        border-radius: 10px;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        border-radius: 10px;
+        -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
+        background: #cdcdcd;
+      }
+      textarea {
+        font-family: monospace;
+        width: 100%;
+        min-height: 600px;
+        border-radius: 5px;
+      }
+      .select2-container--default .select2-results > .select2-results__options {
+        max-height: 595 !important;
+      }
+    </style>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
+  </head>
+  <body>
+    <div class="col-md-12" style="margin-top:10px;">
+      <div class="col-md-12" style="margin-bottom:10px;">
+        <select
+          size="1"
+          class="select"
+          style="width: 600px; height: 40px; font-size: 16px;border-radius: 5px;"
+        >
+          <option value="-1">-SELECT TESTCASE-</option> </select
+        ><button
+          class="btn btn-primary"
+          onclick="runTestcase();"
+          style="margin-left:10px; "
+        >
+          Run
+        </button>
+      </div>
+      <div
+        class="col-md-6"
+        style="margin-bottom:10px;margin-left:10px;padding: 0px;"
+      >
+        <div class="col-md-2 headers">Authorization</div>
+        <input
+          id="Authorization"
+          class="Authorization col-md-7"
+          type="text"
+          name="Authorization"
+          placeholder="[ AccessKey ]  [ AccessToken ]"
+          value=""
+          style="margin: 5px;"
+        />
+      </div>
+      <div
+        class="col-md-6"
+        style="margin-bottom:10px;margin-left:10px;padding: 0px;"
+      >
+        <div class="col-md-2 headers">Device type</div>
+        <input
+          class="DeviceType col-md-7"
+          type="text"
+          name="DeviceType"
+          placeholder="Device type"
+          value="ios"
+          style="margin: 5px;"
+        />
+      </div>
+      <div
+        class="col-md-6"
+        style="margin-bottom:10px;margin-left:10px;padding: 0px;"
+      >
+        <div class="col-md-2 headers">Device id</div>
+        <input
+          class="DeviceId col-md-7"
+          type="text"
+          name="DeviceId"
+          placeholder="Device id"
+          value="123456"
+          style="margin: 5px;"
+        />
+      </div>
+      <div
+        class="col-md-6 notes"
+        style="margin-bottom:10px;margin-left:10px;padding: 0px;display: none;"
+      >
+        <div class="col-md-12" style="padding: 10px;">
+          <span><b>Note : </b> <span class="note_text"></span></span>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <span style="font-weight: 900;">API Request:</span>
+        <br />
+        <textarea class="testcase"></textarea>
+      </div>
+      <div class="col-md-6">
+        <span style="font-weight: 900;">Response:</span>
+        <br />
+        <textarea class="output"></textarea>
+      </div>
+    </div>
+  </body>
+</html>
